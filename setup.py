@@ -7,6 +7,6 @@ warnings.filterwarnings("ignore")
 
 setup(
     name='py-cert-server',
-    version='0.0.4.dev0',
+    version='0.0.5.dev0',
     packages=find_packages()
 )
