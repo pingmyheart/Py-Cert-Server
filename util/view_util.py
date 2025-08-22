@@ -1,4 +1,5 @@
-from dto.certificate_dto import GenerateCertificateAuthorityRequest, GenerateCertificateRequest
+from dto.ca_dto import GenerateCertificateAuthorityRequest
+from dto.certificate_dto import GenerateCertificateRequest
 
 
 def extract_ca_create_request(request) -> GenerateCertificateAuthorityRequest:

@@ -2,8 +2,7 @@ import os
 import shutil
 import uuid
 
-from dto.ca_dto import GenerateCertificateAuthorityResponse
-from dto.certificate_dto import GenerateCertificateAuthorityRequest
+from dto.ca_dto import GenerateCertificateAuthorityResponse, GenerateCertificateAuthorityRequest
 from persistence.model.ca_entity import CAEntity
 from persistence.repository.ca_repository import CARepository
 from util.shell_util import run_command

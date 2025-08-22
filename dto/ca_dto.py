@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class CreateCARequestDTO(BaseModel):
+class GenerateCertificateAuthorityRequest(BaseModel):
     domain: str
     country: str
     location: str

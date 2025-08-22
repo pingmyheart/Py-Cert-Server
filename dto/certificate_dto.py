@@ -1,12 +1,6 @@
 from pydantic import BaseModel
 
 
-class GenerateCertificateAuthorityRequest(BaseModel):
-    domain: str
-    country: str
-    location: str
-
-
 class GenerateCertificateRequest(BaseModel):
     ca_id: str
     domain: str

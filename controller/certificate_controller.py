@@ -3,7 +3,8 @@ import base64
 from flask import request, Blueprint, jsonify, Response
 
 from configuration.logging_configuration import logger as log
-from dto.certificate_dto import GenerateCertificateAuthorityRequest, GenerateCertificateRequest
+from dto.ca_dto import GenerateCertificateAuthorityRequest
+from dto.certificate_dto import GenerateCertificateRequest
 from service import ca_service_bean, certificate_service_bean
 
 certificate_controller_bp = Blueprint('certificate_controller', __name__, url_prefix='/certificate')
