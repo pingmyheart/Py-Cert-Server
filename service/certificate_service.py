@@ -1,0 +1,87 @@
+import base64
+import os
+import shutil
+import uuid
+
+import util.shell_util as shell_util
+import util.template_util as template_util
+from dto.certificate_dto import GenerateCertificateRequest, GenerateCertificateResponse
+from persistence.model.certificate_entity import CertificateEntity
+from persistence.repository.certificate_repository import CertificateRepository
+from service import CAService
+
+
+class CertificateService:
+    def __init__(self, certificate_repository: CertificateRepository,
+                 certificate_authority_service: CAService):
+        self.certificate_repository = certificate_repository
+        self.certificate_authority_service = certificate_authority_service
+
+    def get_certificate(self, certificate_id):
+        return self.certificate_repository.get_certificate(certificate_id)
+
+    def create_certificate(self, certificate_data: GenerateCertificateRequest):
+        existing_certificate = self.certificate_repository.get_certificate_by_domain(certificate_data.domain)
+        if existing_certificate:
+            return GenerateCertificateResponse(
+                certificate_id=existing_certificate.certificate_id,
+                domain=existing_certificate.domain,
+                crt=existing_certificate.crt,
+                key=existing_certificate.key
+            )
+        # Download CA certificate and key
+        ca = self.certificate_authority_service.get_ca_by_id(ca_id=certificate_data.ca_id)
+        os.makedirs(ca.domain, exist_ok=True)
+        with open(f'{ca.domain}/{ca.domain}.crt', 'w') as ca_crt_file:
+            content = base64.b64decode(ca.crt).decode('utf-8')
+            ca_crt_file.write(content)
+        with open(f'{ca.domain}/{ca.domain}.key', 'w') as ca_key_file:
+            content = base64.b64decode(ca.key).decode('utf-8')
+            ca_key_file.write(content)
+
+        # Build configuration file
+        os.makedirs(f"{ca.domain}/{certificate_data.domain}", exist_ok=True)
+        cert_conf = template_util.generate_cert_conf(domain=certificate_data.domain)
+        csr_conf = template_util.generate_csr_conf(country=certificate_data.country,
+                                                   state=certificate_data.state,
+                                                   location=certificate_data.location,
+                                                   organization=certificate_data.organization,
+                                                   organization_unit=certificate_data.organization_unit,
+                                                   domain=certificate_data.domain)
+        with open(f'{ca.domain}/{certificate_data.domain}/cert.conf', 'w') as cert_conf_file:
+            cert_conf_file.write(cert_conf)
+        with open(f'{ca.domain}/{certificate_data.domain}/csr.conf', 'w') as csr_conf_file:
+            csr_conf_file.write(csr_conf)
+
+        # Generate certificate server key
+        shell_util.run_command(f"openssl genrsa -out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.key 2048")
+
+        # Generate Sign Request
+        shell_util.run_command(
+            f"openssl req -new -key \"{ca.domain}\"/\"{certificate_data.domain}\"/server.key -out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.csr -config \"{ca.domain}\"/\"{certificate_data.domain}\"/csr.conf")
+
+        # Generate certificate signed by CA
+        shell_util.run_command(
+            f"openssl x509 -req -in \"{ca.domain}\"/\"{certificate_data.domain}\"/server.csr -CA \"{ca.domain}\"/\"{ca.domain}\".crt -CAkey \"{ca.domain}\"/\"{ca.domain}\".key -CAcreateserial -out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.crt -days 365 -sha256 -extfile \"{ca.domain}\"/\"{certificate_data.domain}\"/cert.conf")
+
+        # Save all
+        encoded_crt, encoded_key = self.__get_encoded_crt_and_key(ca_domain=ca.domain,
+                                                                  certificate_domain=certificate_data.domain)
+        entity = CertificateEntity(certificate_id=uuid.uuid4().__str__(),
+                                   ca_id=ca.ca_id,
+                                   domain=certificate_data.domain,
+                                   crt=encoded_crt,
+                                   key=encoded_key)
+        entity = self.certificate_repository.save(certificate_data=entity)
+        shutil.rmtree(ca.domain)
+        return GenerateCertificateResponse(certificate_id=entity.certificate_id,
+                                           domain=certificate_data.domain,
+                                           crt=entity.crt,
+                                           key=entity.key)
+
+    def __get_encoded_crt_and_key(self, ca_domain: str, certificate_domain: str) -> tuple[str, str]:
+        crt_command = f'cat "{ca_domain}"/"{certificate_domain}"/server.crt | base64 -w 0'
+        key_command = f'cat "{ca_domain}"/"{certificate_domain}"/server.key | base64 -w 0'
+        _, encoded_crt = shell_util.run_command(crt_command)
+        _, encoded_key = shell_util.run_command(key_command)
+        return encoded_crt, encoded_key

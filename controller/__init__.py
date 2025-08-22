@@ -1,0 +1,7 @@
+from controller.certificate_controller import certificate_controller_bp
+from controller.view_controller import view_controller_bp
+
+blueprints = [
+    certificate_controller_bp,
+    view_controller_bp
+]

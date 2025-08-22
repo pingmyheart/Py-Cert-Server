@@ -1,0 +1,6 @@
+from configuration import mongodb_bean
+from persistence.repository.ca_repository import CARepository
+from persistence.repository.certificate_repository import CertificateRepository
+
+ca_repository_bean = CARepository(mongo_client=mongodb_bean)
+certificate_repository_bean = CertificateRepository(mongo_client=mongodb_bean)
