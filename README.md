@@ -71,13 +71,15 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=root
     volumes:
       - mongodb_data:/data/db
-  vulvy-ring-bot:
+  py-cert-server:
     image: ghcr.io/pingmyheart/py-cert-server:${VERSION}
     environment:
       - MONGODB_USERNAME=root
       - MONGODB_PASSWORD=root
       - MONGODB_HOST=mongodb
       - MONGODB_DB=py-cert-server
+    ports:
+      - "8080:8080"
 ```
 
 ## 📚 Usage
