@@ -35,7 +35,7 @@ renewing, and managing SSL certificates for your domains offering a user-friendl
 1. Clone the repository
 
 ```bash
-1. git clone https://github.com/pingmyheart/Py-Cert-Server.git```
+1. git clone https://github.com/pingmyheart/Py-Cert-Server.git
 cd Py-Cert-Server
 python3 -m venv venv
 source venv/bin/activate
