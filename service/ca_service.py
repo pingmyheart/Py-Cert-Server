@@ -18,6 +18,9 @@ class CAService:
     def get_ca_by_id(self, ca_id: str) -> CAEntity:
         return self.ca_repository.find_ca_by_id(ca_id)
 
+    def delete_ca_by_id(self, ca_id: str):
+        return self.ca_repository.delete_ca_by_id(ca_id)
+
     def create_ca(self, ca_data: GenerateCertificateAuthorityRequest) -> GenerateCertificateAuthorityResponse:
         return self.__idempotent_create_ca(ca_data)
 
@@ -50,7 +53,11 @@ class CAService:
                                   country: str,
                                   location: str) -> None:
         os.makedirs(domain, exist_ok=True)
-        command = f'openssl req -x509 -sha256 -days 356 -nodes -newkey rsa:2048 -subj "/CN={domain}/C={country}/L={location}" -keyout "{domain}"/"{domain}".key -out "{domain}"/"{domain}".crt'
+        command = f"""openssl req -x509 \
+-sha256 -days 356 \
+-nodes -newkey rsa:2048 \
+-subj "/CN={domain}/C={country}/L={location}" \
+-keyout "{domain}"/"{domain}".key -out "{domain}"/"{domain}".crt"""
         # Execute the command to generate CA certificate and key
         run_command(command)
 

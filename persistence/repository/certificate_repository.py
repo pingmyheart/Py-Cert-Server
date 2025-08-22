@@ -45,3 +45,11 @@ class CertificateRepository:
         """
         self.__collection.insert_one(certificate_data.model_dump())
         return certificate_data
+
+    def delete_certificate_by_id(self, certificate_id):
+        """
+        Delete a certificate by its ID.
+        :param certificate_id: The ID of the certificate to delete.
+        :return: The result of the delete operation.
+        """
+        return self.__collection.delete_one({"certificate_id": certificate_id})

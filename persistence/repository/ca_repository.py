@@ -44,3 +44,11 @@ class CARepository:
         """
         self.__collection.insert_one(ca_data.model_dump())
         return ca_data
+
+    def delete_ca_by_id(self, ca_id):
+        """
+        Delete a CA entity by its ID.
+        :param ca_id: The ID of the CA to be deleted.
+        :return: The result of the delete operation.
+        """
+        return self.__collection.delete_one({"ca_id": ca_id})

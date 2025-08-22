@@ -20,6 +20,9 @@ class CertificateService:
     def get_certificate(self, certificate_id):
         return self.certificate_repository.get_certificate(certificate_id)
 
+    def get_certificates_by_ca(self, ca_id: str):
+        return self.certificate_repository.find_certificates_by_ca(ca_id=ca_id)
+
     def create_certificate(self, certificate_data: GenerateCertificateRequest):
         existing_certificate = self.certificate_repository.get_certificate_by_domain(certificate_data.domain)
         if existing_certificate:
@@ -58,11 +61,18 @@ class CertificateService:
 
         # Generate Sign Request
         shell_util.run_command(
-            f"openssl req -new -key \"{ca.domain}\"/\"{certificate_data.domain}\"/server.key -out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.csr -config \"{ca.domain}\"/\"{certificate_data.domain}\"/csr.conf")
+            f"""openssl req -new -key \"{ca.domain}\"/\"{certificate_data.domain}\"/server.key \
+-out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.csr \
+-config \"{ca.domain}\"/\"{certificate_data.domain}\"/csr.conf""")
 
         # Generate certificate signed by CA
         shell_util.run_command(
-            f"openssl x509 -req -in \"{ca.domain}\"/\"{certificate_data.domain}\"/server.csr -CA \"{ca.domain}\"/\"{ca.domain}\".crt -CAkey \"{ca.domain}\"/\"{ca.domain}\".key -CAcreateserial -out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.crt -days 365 -sha256 -extfile \"{ca.domain}\"/\"{certificate_data.domain}\"/cert.conf")
+            f"""openssl x509 -req \
+-in \"{ca.domain}\"/\"{certificate_data.domain}\"/server.csr \
+-CA \"{ca.domain}\"/\"{ca.domain}\".crt -CAkey \"{ca.domain}\"/\"{ca.domain}\".key \
+-CAcreateserial -out \"{ca.domain}\"/\"{certificate_data.domain}\"/server.crt \
+-days 365 \
+-sha256 -extfile \"{ca.domain}\"/\"{certificate_data.domain}\"/cert.conf""")
 
         # Save all
         encoded_crt, encoded_key = self.__get_encoded_crt_and_key(ca_domain=ca.domain,
@@ -85,3 +95,6 @@ class CertificateService:
         _, encoded_crt = shell_util.run_command(crt_command)
         _, encoded_key = shell_util.run_command(key_command)
         return encoded_crt, encoded_key
+
+    def delete_certificate(self, certificate_id):
+        self.certificate_repository.delete_certificate_by_id(certificate_id=certificate_id)

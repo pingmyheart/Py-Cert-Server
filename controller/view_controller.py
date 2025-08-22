@@ -33,6 +33,22 @@ def create_ca():
     return redirect(url_for("view_controller.view_certification_authorities"))
 
 
+@view_controller_bp.route('/view/ca/<ca_id>/delete', methods=['POST'])
+def delete_ca(ca_id: str):
+    certificates = certificate_service_bean.get_certificates_by_ca(ca_id=ca_id)
+    for cert in certificates:
+        certificate_service_bean.delete_certificate(certificate_id=cert.certificate_id)
+    ca_service_bean.delete_ca_by_id(ca_id=ca_id)
+    return redirect(url_for("view_controller.view_certification_authorities"))
+
+
+@view_controller_bp.route('/view/certificate/<certificate_id>/delete', methods=['POST'])
+def delete_certificate(certificate_id: str):
+    ca_id = certificate_service_bean.get_certificate(certificate_id=certificate_id).ca_id
+    certificate_service_bean.delete_certificate(certificate_id=certificate_id)
+    return redirect(url_for("view_controller.view_certification_authority", ca_id=ca_id))
+
+
 @view_controller_bp.route('/view/certificate', methods=['POST'])
 def create_certificate():
     log.info(request.form)

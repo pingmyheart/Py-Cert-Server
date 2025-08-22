@@ -20,7 +20,7 @@
     </style>
 </head>
 <body>
-<h1 class="text-center"><a href="/" style="text-decoration: none; color: inherit;"><i class="bi bi-house"></i>
+<h1 class="mx-5 my-3"><a href="/" style="text-decoration: none; color: inherit;"><i class="bi bi-house"></i>
     Py-Cert-Server</a></h1>
 <div class="container">
     <div class="row d-flex justify-content-end">
@@ -196,10 +196,12 @@
                 </a>
 
                 <!-- Delete button -->
-                <a class="btn btn-sm btn-outline-danger"
-                   href="{{ url_for('certificate_controller.download_certificate_ca', ca_id=domain.ca_id) }}">
-                    <i class="bi bi-trash"></i> Delete
-                </a>
+                <form action="{{ url_for('view_controller.delete_ca', ca_id=domain.ca_id) }}" method="POST"
+                      style="display:inline;">
+                    <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash"></i>
+                        Delete
+                    </button>
+                </form>
             </td>
         </tr>
         {% endfor %}
