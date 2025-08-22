@@ -54,7 +54,7 @@ class CAService:
                                   location: str) -> None:
         os.makedirs(domain, exist_ok=True)
         command = f"""openssl req -x509 \
--sha256 -days 356 \
+-sha256 -days 365 \
 -nodes -newkey rsa:2048 \
 -subj "/CN={domain}/C={country}/L={location}" \
 -keyout "{domain}"/"{domain}".key -out "{domain}"/"{domain}".crt"""
@@ -67,3 +67,9 @@ class CAService:
         _, encoded_crt = run_command(crt_command)
         _, encoded_key = run_command(key_command)
         return encoded_crt, encoded_key
+
+    def find_all(self) -> list[CAEntity]:
+        return self.ca_repository.find_all()
+
+    def renew(self, ca_id: str):
+        pass

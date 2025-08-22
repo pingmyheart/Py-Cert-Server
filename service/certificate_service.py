@@ -98,3 +98,6 @@ class CertificateService:
 
     def delete_certificate(self, certificate_id):
         self.certificate_repository.delete_certificate_by_id(certificate_id=certificate_id)
+
+    def renew(self, certificate_id: str):
+        pass
