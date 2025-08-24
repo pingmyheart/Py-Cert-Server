@@ -58,7 +58,7 @@ class CAService:
                                   location: str) -> None:
         os.makedirs(domain, exist_ok=True)
         command = f"""openssl req -x509 \
--sha256 -days 7 \
+-sha256 -days 365 \
 -nodes -newkey rsa:2048 \
 -subj "/CN={domain}/C={country}/L={location}" \
 -keyout "{domain}"/"{domain}".key -out "{domain}"/"{domain}".crt"""
