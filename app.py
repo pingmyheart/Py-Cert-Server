@@ -5,6 +5,7 @@ import controller
 import dto
 import persistence.model
 import persistence.repository
+import scheduling
 import service
 import util
 from configuration.logging_configuration import logging as log
@@ -16,6 +17,7 @@ from controller import blueprints
                                              persistence,
                                              persistence.model,
                                              persistence.repository,
+                                             scheduling,
                                              service,
                                              util]]
 

@@ -42,7 +42,10 @@ class CARepository:
         :param ca_data: CAEntity to be saved.
         :return: The saved CAEntity.
         """
-        self.__collection.insert_one(ca_data.model_dump())
+        if self.find_ca_by_domain(ca_domain=ca_data.domain):
+            self.__collection.update_one({"domain": ca_data.domain}, {"$set": ca_data.model_dump()})
+        else:
+            self.__collection.insert_one(ca_data.model_dump())
         return ca_data
 
     def delete_ca_by_id(self, ca_id):

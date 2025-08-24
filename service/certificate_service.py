@@ -4,6 +4,7 @@ import shutil
 import uuid
 
 import util.shell_util as shell_util
+import util.ssl_util as ssl_util
 import util.template_util as template_util
 from dto.certificate_dto import GenerateCertificateRequest, GenerateCertificateResponse
 from persistence.model.certificate_entity import CertificateEntity
@@ -32,6 +33,9 @@ class CertificateService:
                 crt=existing_certificate.crt,
                 key=existing_certificate.key
             )
+        return self.__do_generate_certificate(certificate_data=certificate_data)
+
+    def __do_generate_certificate(self, certificate_data: GenerateCertificateRequest):
         # Download CA certificate and key
         ca = self.certificate_authority_service.get_ca_by_id(ca_id=certificate_data.ca_id)
         os.makedirs(ca.domain, exist_ok=True)
@@ -100,4 +104,15 @@ class CertificateService:
         self.certificate_repository.delete_certificate_by_id(certificate_id=certificate_id)
 
     def renew(self, certificate_id: str):
-        pass
+        entity = self.certificate_repository.get_certificate(certificate_id=certificate_id)
+        dictionary = ssl_util.parse_certificate(entity.crt)
+        return self.__do_generate_certificate(certificate_data=GenerateCertificateRequest(ca_id=entity.ca_id,
+                                                                                          domain=entity.certificate_data.domain,
+                                                                                          country=dictionary["country"],
+                                                                                          location=dictionary[
+                                                                                              "location"],
+                                                                                          state=dictionary["state"],
+                                                                                          organization=dictionary[
+                                                                                              "organization"],
+                                                                                          organization_unit=dictionary[
+                                                                                              "organization_unit"]))

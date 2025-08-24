@@ -15,7 +15,18 @@ class CertificateRepository:
         """
         return [CertificateEntity.model_validate(model) for model in self.__collection.find({"ca_id": ca_id})]
 
-    def get_certificate(self, certificate_id: str):
+    def find_certificate_by_domain(self, domain: str) -> CertificateEntity | None:
+        """
+        Retrieve a certificate by its domain.
+        :param domain: The domain of the certificate to retrieve.
+        :return: The certificate data if found, otherwise None.
+        """
+        entity = self.__collection.find_one({"domain": domain})
+        if entity:
+            return CertificateEntity.model_validate(entity)
+        return None
+
+    def get_certificate(self, certificate_id: str) -> CertificateEntity | None:
         """
         Retrieve a certificate by its ID.
         :param certificate_id: The ID of the certificate to retrieve.
@@ -43,7 +54,11 @@ class CertificateRepository:
         :param certificate_data: entity
         :return: saved entity
         """
-        self.__collection.insert_one(certificate_data.model_dump())
+        if self.find_certificate_by_domain(domain=certificate_data.domain):
+            self.__collection.update_one({"domain": certificate_data.domain},
+                                         {"$set": certificate_data.model_dump()})
+        else:
+            self.__collection.insert_one(certificate_data.model_dump())
         return certificate_data
 
     def delete_certificate_by_id(self, certificate_id):

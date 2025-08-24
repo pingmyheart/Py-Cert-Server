@@ -2,6 +2,7 @@ import os
 import shutil
 import uuid
 
+import util.ssl_util as ssl_util
 from dto.ca_dto import GenerateCertificateAuthorityResponse, GenerateCertificateAuthorityRequest
 from persistence.model.ca_entity import CAEntity
 from persistence.repository.ca_repository import CARepository
@@ -34,6 +35,9 @@ class CAService:
             return GenerateCertificateAuthorityResponse(domain=existing_ca.domain,
                                                         crt=existing_ca.crt,
                                                         ca_id=existing_ca.ca_id)
+        return self.__do_create_ca(ca_data=ca_data)
+
+    def __do_create_ca(self, ca_data: GenerateCertificateAuthorityRequest) -> GenerateCertificateAuthorityResponse:
         # Generate CA certificate and key
         self.__generate_ca_crt_and_key(domain=ca_data.domain,
                                        country=ca_data.country,
@@ -54,7 +58,7 @@ class CAService:
                                   location: str) -> None:
         os.makedirs(domain, exist_ok=True)
         command = f"""openssl req -x509 \
--sha256 -days 365 \
+-sha256 -days 7 \
 -nodes -newkey rsa:2048 \
 -subj "/CN={domain}/C={country}/L={location}" \
 -keyout "{domain}"/"{domain}".key -out "{domain}"/"{domain}".crt"""
@@ -72,4 +76,7 @@ class CAService:
         return self.ca_repository.find_all()
 
     def renew(self, ca_id: str):
-        pass
+        dictionary = ssl_util.parse_certificate(self.get_ca_by_id(ca_id=ca_id).crt)
+        return self.__do_create_ca(ca_data=GenerateCertificateAuthorityRequest(domain=dictionary["domain"],
+                                                                               country=dictionary["country"],
+                                                                               location=dictionary["location"]))
