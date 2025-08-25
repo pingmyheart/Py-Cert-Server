@@ -3,6 +3,7 @@ import shutil
 import uuid
 
 import util.ssl_util as ssl_util
+from configuration.logging_configuration import logger as log
 from dto.ca_dto import GenerateCertificateAuthorityResponse, GenerateCertificateAuthorityRequest
 from persistence.model.ca_entity import CAEntity
 from persistence.repository.ca_repository import CARepository
@@ -14,15 +15,19 @@ class CAService:
         self.ca_repository = ca_repository
 
     def get_ca(self, ca_domain: str):
+        log.info(f"Retrieving CA with domain {ca_domain}")
         return self.ca_repository.find_ca_by_domain(ca_domain)
 
     def get_ca_by_id(self, ca_id: str) -> CAEntity:
+        log.info(f"Retrieving CA with ID {ca_id}")
         return self.ca_repository.find_ca_by_id(ca_id)
 
     def delete_ca_by_id(self, ca_id: str):
+        log.info(f"Deleting CA with ID {ca_id}")
         return self.ca_repository.delete_ca_by_id(ca_id)
 
     def create_ca(self, ca_data: GenerateCertificateAuthorityRequest) -> GenerateCertificateAuthorityResponse:
+        log.info(f"Creating CA with domain {ca_data.domain}")
         return self.__idempotent_create_ca(ca_data)
 
     def __idempotent_create_ca(self,
@@ -30,15 +35,19 @@ class CAService:
         """
         Create a CA if it does not already exist.
         """
+        log.info("Checking if CA already exists...")
         existing_ca = self.ca_repository.find_ca_by_domain(ca_domain=ca_data.domain)
         if existing_ca:
+            log.info("CA already exists, returning existing CA.")
             return GenerateCertificateAuthorityResponse(domain=existing_ca.domain,
                                                         crt=existing_ca.crt,
                                                         ca_id=existing_ca.ca_id)
+        log.info(f"Creating CA with domain {ca_data.domain}...")
         return self.__do_create_ca(ca_data=ca_data)
 
     def __do_create_ca(self, ca_data: GenerateCertificateAuthorityRequest) -> GenerateCertificateAuthorityResponse:
         # Generate CA certificate and key
+        log.info("Generating CA certificate and key")
         self.__generate_ca_crt_and_key(domain=ca_data.domain,
                                        country=ca_data.country,
                                        location=ca_data.location)
@@ -47,6 +56,7 @@ class CAService:
                           domain=ca_data.domain,
                           crt=encoded_crt,
                           key=encoded_key)
+        log.info("Saving CA to database")
         entity = self.ca_repository.save(ca_data=entity)
         shutil.rmtree(ca_data.domain)
         return GenerateCertificateAuthorityResponse(domain=ca_data.domain,
@@ -76,6 +86,7 @@ class CAService:
         return self.ca_repository.find_all()
 
     def renew(self, ca_id: str):
+        log.info(f"Renewing CA with ID {ca_id}")
         dictionary = ssl_util.parse_certificate(self.get_ca_by_id(ca_id=ca_id).crt)
         return self.__do_create_ca(ca_data=GenerateCertificateAuthorityRequest(domain=dictionary["domain"],
                                                                                country=dictionary["country"],

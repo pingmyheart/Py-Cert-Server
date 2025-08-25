@@ -3,7 +3,6 @@ from typing import List
 from flask import Blueprint, render_template, redirect, url_for, request
 
 import util.view_util as view_util
-from configuration.logging_configuration import logger as log
 from persistence.model.ca_entity import CAEntity
 from service import ca_service_bean, certificate_service_bean
 
@@ -51,7 +50,6 @@ def delete_certificate(certificate_id: str):
 
 @view_controller_bp.route('/view/certificate', methods=['POST'])
 def create_certificate():
-    log.info(request.form)
     service_request = view_util.extract_certificate_create_request(request=request)
     certificate_service_bean.create_certificate(certificate_data=service_request)
     return redirect(url_for("view_controller.view_certification_authority", ca_id=service_request.ca_id))

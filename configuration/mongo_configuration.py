@@ -25,6 +25,7 @@ def mongo_client() -> Database:
                          username=mongo_username,
                          password=mongo_password,
                          authSource='admin',
-                         authMechanism='SCRAM-SHA-1')
+                         authMechanism='SCRAM-SHA-1',
+                         serverSelectionTimeoutMS=5000)
 
     return client[mongo_db]
