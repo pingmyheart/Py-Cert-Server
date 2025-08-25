@@ -37,17 +37,6 @@ class CertificateRepository:
             return CertificateEntity.model_validate(entity)
         return None
 
-    def get_certificate_by_domain(self, domain: str):
-        """
-        Retrieve a certificate by its domain.
-        :param domain: The domain of the certificate to retrieve.
-        :return: The certificate data if found, otherwise None.
-        """
-        entity = self.__collection.find_one({"domain": domain})
-        if entity:
-            return CertificateEntity.model_validate(entity)
-        return None
-
     def save(self, certificate_data: CertificateEntity):
         """
         Create new certificate record

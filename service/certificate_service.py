@@ -30,7 +30,7 @@ class CertificateService:
     def create_certificate(self, certificate_data: GenerateCertificateRequest):
         log.info(f"Creating certificate for domain {certificate_data.domain}")
         log.info("Checking if certificate already exists...")
-        existing_certificate = self.certificate_repository.get_certificate_by_domain(certificate_data.domain)
+        existing_certificate = self.certificate_repository.find_certificate_by_domain(certificate_data.domain)
         if existing_certificate:
             log.info("Certificate already exists, returning existing certificate.")
             return GenerateCertificateResponse(
